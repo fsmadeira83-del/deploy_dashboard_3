@@ -36,6 +36,9 @@ Este projeto é um **Template Repository**.
 
 1. Clica em **Use this template**
    - Escolhe **Create a New Repository**
+  
+![Create a New Repository](Create_repo.png)
+
 2. Escolhe:
    - **Repository name** (ex: `dashboard-superstore`)
    - **Public** (na opção **Visibility**)
