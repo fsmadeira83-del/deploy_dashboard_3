@@ -83,7 +83,7 @@ st.divider()
 # --------------------------------------------------
 # Gráfico 1 - Free Cash Flow Médio ao longo do tempo
 # --------------------------------------------------
-st.subheader("📅 Free Cash Flow Médio ao longo do tempo por categoria")
+st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
 
 # Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 freecashflow_over_time = (
