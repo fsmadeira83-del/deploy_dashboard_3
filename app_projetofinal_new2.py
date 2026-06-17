@@ -118,17 +118,13 @@ filtered_df["TamanhoEmpresa"] = pd.Categorical(
     ordered=True
 )
 
-freecashflow_over_time = (
+freecashflow_by_size = (
     filtered_df
-    .groupby(
-        [pd.Grouper(key="Ano", freq="ME"), "TamanhoEmpresa"],
-        observed=True
-    )["FreeCashFlow"]
+    .groupby("TamanhoEmpresa")["FreeCashFlow"]
     .mean()
-    .reset_index()
 )
 
-st.bar_chart(freecashflow_over_time)
+st.bar_chart(freecashflow_by_size)
 
 st.divider()
 
