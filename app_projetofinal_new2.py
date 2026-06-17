@@ -132,6 +132,7 @@ top_sectores = (
     .mean()
     .sort_values(ascending=False)
     .head(10)
+    .round(0)
 )
 
 st.dataframe(top_sectores)
