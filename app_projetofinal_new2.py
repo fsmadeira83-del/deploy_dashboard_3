@@ -112,8 +112,8 @@ st.subheader("🌍 Free Cash Flow Médio por Tamanho da Empresa")
 # Agrupar a média de Free Cash Flow por Tamanho da Empresa
 ordem = ["Microempresas", "PequenasEmpresas", "MédiasEmpresas", "GrandesEmpresas"]
 
-filtered_df["SectorAtividade"] = pd.Categorical(
-    filtered_df["SectorAtividade"],
+filtered_df["TamanhoEmpresa"] = pd.Categorical(
+    filtered_df["TamanhoEmpresa"],
     categories=ordem,
     ordered=True
 )
@@ -121,7 +121,7 @@ filtered_df["SectorAtividade"] = pd.Categorical(
 freecashflow_over_time = (
     filtered_df
     .groupby(
-        [pd.Grouper(key="Ano", freq="ME"), "SectorAtividade"],
+        [pd.Grouper(key="Ano", freq="ME"), "TamanhoEmpresa"],
         observed=True
     )["FreeCashFlow"]
     .mean()
