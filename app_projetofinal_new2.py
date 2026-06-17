@@ -110,7 +110,7 @@ st.line_chart(freecashflow_pivot)
 st.subheader("🌍 Free Cash Flow Médio por Tamanho da Empresa")
 
 # Agrupar a média de Free Cash Flow por Tamanho da Empresa
-ordem = ["Microempresas", "PequenasEmpresas", "MédiasEmpresas", "GrandesEmpresas"]
+ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
 
 filtered_df["TamanhoEmpresa"] = pd.Categorical(
     filtered_df["TamanhoEmpresa"],
