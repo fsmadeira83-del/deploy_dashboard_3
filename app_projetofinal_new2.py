@@ -86,7 +86,7 @@ st.divider()
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por categoria")
 
 # Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
-sales_over_time = (
+freecashflow_over_time = (
     filtered_df
     .groupby(
         [pd.Grouper(key="Ano", freq="ME"), "SectorAtividade"]
