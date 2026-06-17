@@ -85,7 +85,7 @@ st.divider()
 # --------------------------------------------------
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por categoria")
 
-# Agrupar a média de Vendas e Serviços em cada ano por Sector de Atividade
+# Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 sales_over_time = (
     filtered_df
     .groupby(
@@ -96,13 +96,13 @@ sales_over_time = (
 )
 
 # Criar uma pivot table
-sales_pivot = sales_over_time.pivot(
+freecashflow_pivot = freecashflow_over_time.pivot(
     index="Ano",
     columns="SectorAtividade",
     values="FreeCashFlow"
 )
 
-st.line_chart(sales_pivot)
+st.line_chart(freecashflow_pivot)
 
 # -------------------------------------------------------
 # Gráfico 2 - Free Cash Flow Médio por Tamanho da Empresa
@@ -110,13 +110,24 @@ st.line_chart(sales_pivot)
 st.subheader("🌍 Free Cash Flow Médio por Tamanho da Empresa")
 
 # Agrupar a média de Free Cash Flow por Tamanho da Empresa
-sales_by_size = (
-    filtered_df
-    .groupby("TamanhoEmpresa")["FreeCashFlow"]
-    .mean()
+ordem = ["Microempresas", "PequenasEmpresas", "MédiasEmpresas", "GrandesEmpresas"]
+
+filtered_df["SectorAtividade"] = pd.Categorical(
+    filtered_df["SectorAtividade"],
+    categories=ordem,
+    ordered=True
 )
 
-st.bar_chart(sales_by_size)
+freecashflow_over_time = (
+    filtered_df
+    .groupby(
+        [pd.Grouper(key="Ano", freq="ME"), "SectorAtividade"],
+        observed=True
+    )["FreeCashFlow"]
+    .mean()
+    .reset_index()
+
+st.bar_chart(freecashflow_by_size)
 
 st.divider()
 
