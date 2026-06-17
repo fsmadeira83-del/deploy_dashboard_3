@@ -73,9 +73,9 @@ num_empresas = filtered_df["NºEmpresas"].sum()
 
 # Vamos dividir a área em 3 colunas para mostrar os KPIs lado a lado
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("💰 Vendas Médias", f"€{media_VendasServicos:,.0f}")
-col2.metric("📈 Lucro Médio", f"€{media_ResultadoLiquido:,.0f}")
-col3.metric("📈 Free Cash Flow Médio", f"€{media_FreeCashFlow:,.0f}")
+col1.metric("💰 Vendas Médias", f"€{media_VendasServicos:,.0f}".replace(",", "."))
+col2.metric("📈 Lucro Médio", f"€{media_ResultadoLiquido:,.0f}".replace(",", "."))
+col3.metric("📈 Free Cash Flow Médio", f"€{media_FreeCashFlow:,.0f}".replace(",", "."))
 col4.metric("🧾 Nº de Empresas", num_empresas)
 
 st.divider()
