@@ -128,7 +128,7 @@ freecashflow_over_time = (
     .reset_index()
 )
 
-st.bar_chart(freecashflow_by_size)
+st.bar_chart(freecashflow_over_time)
 
 st.divider()
 
