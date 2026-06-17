@@ -126,7 +126,7 @@ freecashflow_over_time = (
     )["FreeCashFlow"]
     .mean()
     .reset_index()
-
+)
 st.bar_chart(freecashflow_by_size)
 
 st.divider()
