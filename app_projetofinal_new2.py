@@ -114,7 +114,6 @@ st.subheader("🌍 Free Cash Flow Médio por Tamanho da Empresa")
 
 # Agrupar a média de Free Cash Flow por Tamanho da Empresa
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
-
 filtered_df["TamanhoEmpresa"] = pd.Categorical(
     filtered_df["TamanhoEmpresa"],
     categories=ordem,
@@ -123,11 +122,20 @@ filtered_df["TamanhoEmpresa"] = pd.Categorical(
 
 freecashflow_by_size = (
     filtered_df
-    .groupby("TamanhoEmpresa")["FreeCashFlow"]
+    .groupby("TamanhoEmpresa", observed=True)["FreeCashFlow"]
     .mean()
+    .reset_index()
 )
 
-st.bar_chart(freecashflow_by_size)
+fig = px.bar(
+    freecashflow_by_size,
+    x="TamanhoEmpresa",
+    y="FreeCashFlow"
+)
+
+fig.update_yaxes(tickformat=".0f")
+
+st.plotly_chart(fig)
 
 st.divider()
 
