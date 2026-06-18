@@ -69,8 +69,7 @@ filtered_df = df[
 media_VendasServicos = filtered_df["VendasServicos"].mean()
 media_ResultadoLiquido = filtered_df["RL"].mean()
 media_FreeCashFlow = filtered_df["FreeCashFlow"].mean()
-media_empresas = filtered_df["NºEmpresas"].mean()
-round(0)
+media_empresas = round(filtered_df["NºEmpresas"].mean(), 0)
 
 # Vamos dividir a área em 3 colunas para mostrar os KPIs lado a lado
 col1, col2, col3, col4 = st.columns(4)
