@@ -105,6 +105,16 @@ fig = px.line(
 
 fig.update_yaxes(tickformat=".0f")
 
+fig.update_layout(
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=-0.3,
+        xanchor="center",
+        x=0.5
+    )
+)
+
 st.plotly_chart(fig)
 
 # -------------------------------------------------------
