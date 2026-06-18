@@ -74,9 +74,9 @@ media_empresas = int(filtered_df["NºEmpresas"].mean())
 
 # Vamos dividir a área em 3 colunas para mostrar os KPIs lado a lado
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("💰 Vendas Médias", f"€{media_VendasServicos:,.0f}".replace(",", "."))
-col2.metric("📈 Lucro Médio", f"€{media_ResultadoLiquido:,.0f}".replace(",", "."))
-col3.metric("📈 Free Cash Flow Médio", f"€{media_FreeCashFlow:,.0f}".replace(",", "."))
+col1.metric("💰 Vendas Médias", f"m€{media_VendasServicos:,.0f}".replace(",", "."))
+col2.metric("📈 Lucro Médio", f"m€{media_ResultadoLiquido:,.0f}".replace(",", "."))
+col3.metric("📈 Free Cash Flow Médio", f"m€{media_FreeCashFlow:,.0f}".replace(",", "."))
 col4.metric("🧾 N.º Médio de Empresas", media_empresas)
 
 st.divider()
