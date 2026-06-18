@@ -95,14 +95,16 @@ freecashflow_over_time = (
     .reset_index()
 )
 
-# Criar uma pivot table
-freecashflow_pivot = freecashflow_over_time.pivot(
-    index="Ano",
-    columns="SectorAtividade",
-    values="FreeCashFlow"
+fig = px.line(
+    freecashflow_over_time,
+    x="Ano",
+    y="FreeCashFlow",
+    color="SectorAtividade"
 )
 
-st.line_chart(freecashflow_pivot)
+fig.update_yaxes(tickformat=".0f")
+
+st.plotly_chart(fig)
 
 # -------------------------------------------------------
 # Gráfico 2 - Free Cash Flow Médio por Tamanho da Empresa
