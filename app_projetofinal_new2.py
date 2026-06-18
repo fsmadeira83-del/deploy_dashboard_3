@@ -109,9 +109,9 @@ fig.update_layout(
     legend=dict(
         orientation="h",
         yanchor="bottom",
-        y=-0.3,
+        y=0.5,
         xanchor="center",
-        x=0.5
+        x=0.1
     )
 )
 
