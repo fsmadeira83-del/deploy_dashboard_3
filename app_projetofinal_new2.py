@@ -230,17 +230,6 @@ df_long["Componente"] = df_long["Componente"].map({
     "FluxosCaixa_AtividadesFinanciamento": "Fluxos de Financiamento",
 })
 
-# Selector de dimensão de empresa
-tamanho_sel = st.selectbox(
-    "Selecionar dimensão de empresa",
-    options=ordem,
-    index=3,  # default: Grandes empresas
-    key="sel_tamanho_fcf"
-)
-
-df_plot  = df_long[df_long["TamanhoEmpresa"] == tamanho_sel]
-df_fcf   = df_agg[df_agg["TamanhoEmpresa"] == tamanho_sel]
-
 # Paleta de cores fixa por componente
 mapa_cores = {
     "Fluxos Operacionais":    "#2196F3",
