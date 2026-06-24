@@ -84,8 +84,6 @@ st.divider()
 # --------------------------------------------------
 # Gráfico 1 - Free Cash Flow Médio ao longo do tempo
 # --------------------------------------------------
-st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
-
 # Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
 
@@ -118,9 +116,10 @@ fig.update_yaxes(
         (y_max // 10000 + 1) * 10000
     ]
 )
+
 fig.update_xaxes(
-    dtick="Y1",
-    tickformat="%Y"
+    dtick="M1",
+    tickformat="%b %Y"
 )
 
 fig.update_layout(
