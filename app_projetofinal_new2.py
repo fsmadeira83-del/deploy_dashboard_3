@@ -117,11 +117,6 @@ fig.update_yaxes(
     ]
 )
 
-fig.update_xaxes(
-    dtick="Y1",
-    tickformat="%b %Y"
-)
-
 fig.update_layout(
     legend=dict(
         orientation="h",
