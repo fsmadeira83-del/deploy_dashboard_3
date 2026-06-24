@@ -115,7 +115,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------------------------------
-# Gráfico 2 - Barras Empilhadas: FCF Médio por Tamanho da Empresa e Ano
+# Gráfico 2 - Linhas por Tamanho da Empresa ao longo do tempo
 # -------------------------------------------------------
 st.subheader("🏢 Free Cash Flow Médio por Tamanho da Empresa")
 
@@ -132,7 +132,6 @@ freecashflow_by_size_year = (
     .mean()
     .reset_index()
 )
-freecashflow_by_size_year["Ano"] = freecashflow_by_size_year["Ano"].dt.year
 
 mapa_cores = {
     "Microempresas":     "#185FA5",
@@ -145,15 +144,16 @@ fig2 = go.Figure()
 
 for tamanho in ordem:
     df_t = freecashflow_by_size_year[freecashflow_by_size_year["TamanhoEmpresa"] == tamanho]
-    fig2.add_trace(go.Bar(
+    fig2.add_trace(go.Scatter(
         name=tamanho,
         x=df_t["Ano"],
         y=df_t["FreeCashFlow"],
-        marker_color=mapa_cores[tamanho],
-        opacity=0.85,
+        mode="lines+markers",
+        line=dict(color=mapa_cores[tamanho], width=2.5),
+        marker=dict(size=6, color=mapa_cores[tamanho]),
         hovertemplate=(
             f"<b>{tamanho}</b><br>"
-            "Ano: %{x}<br>"
+            "Ano: %{x|%Y}<br>"
             "FCF Médio: %{y:,.0f} k€<extra></extra>"
         ),
     ))
@@ -161,8 +161,7 @@ for tamanho in ordem:
 fig2.update_yaxes(tickformat=".0f")
 
 fig2.update_layout(
-    barmode="stack",
-    xaxis=dict(title="Ano", dtick=1),
+    xaxis=dict(title="Ano"),
     yaxis=dict(title="FCF Médio (k€)", tickformat=".0f"),
     legend=dict(
         orientation="h",
@@ -484,6 +483,8 @@ else:
 - **RCP negativo + FCF positivo** → empresa com prejuízo mas que ainda gera caixa. Situação de alerta a monitorizar.
 - **Ambos negativos** → sinal de forte pressão financeira.
 """)
+
+st.divider()
 
 # --------------------------------------------------
 # Rodapé
