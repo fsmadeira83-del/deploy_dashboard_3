@@ -109,12 +109,7 @@ y_min = freecashflow_over_time["FreeCashFlow"].min()
 y_max = freecashflow_over_time["FreeCashFlow"].max()
 
 fig.update_yaxes(
-    tickformat=".0f",
-    dtick=10000,
-    range=[
-        (y_min // 10000) * 10000,
-        (y_max // 10000 + 1) * 10000
-    ]
+    tickformat=".0f"
 )
 
 fig.update_layout(
