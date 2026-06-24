@@ -87,6 +87,9 @@ st.divider()
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
 
 # Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
+st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
+
+# Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 freecashflow_over_time = (
     filtered_df
     .groupby(
@@ -103,15 +106,26 @@ fig = px.line(
     color="SectorAtividade"
 )
 
-fig.update_yaxes(tickformat=".0f")
+# Calcular o intervalo do eixo Y com base nos dados
+y_min = freecashflow_over_time["FreeCashFlow"].min()
+y_max = freecashflow_over_time["FreeCashFlow"].max()
+
+fig.update_yaxes(
+    tickformat=".0f",
+    dtick=10000,
+    range=[
+        (y_min // 10000) * 10000,
+        (y_max // 10000 + 1) * 10000
+    ]
+)
 
 fig.update_layout(
     legend=dict(
         orientation="h",
-        yanchor="bottom",
-        y=-0.5,
-        xanchor="center",
-        x=0.5
+        yanchor="top",
+        y=-0.2,
+        xanchor="left",
+        x=0
     )
 )
 
