@@ -62,8 +62,8 @@ filtered_df = df[
     (df["SectorAtividade"].isin(SectorAtividade)) &
     (df["TamanhoEmpresa"].isin(TamanhoEmpresa)) &
     (df["Ano"].dt.year.between(year_range[0], year_range[1]))
-filtered_df = filtered_df[filtered_df["FreeCashFlow"] != 0
 ]
+filtered_df = filtered_df[filtered_df["FreeCashFlow"] != 0]
 
 # --------------------------------------------------
 # Parte superior com KPIs
