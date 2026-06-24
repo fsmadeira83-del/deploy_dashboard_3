@@ -178,6 +178,142 @@ top_sectores = (
 
 st.dataframe(top_sectores)
 
+st.divider()
+
+# ------------------------------------------------------------------
+# Gráfico 3 - Decomposição do Free Cash Flow por Componente
+# ------------------------------------------------------------------
+st.subheader("🔍 Decomposição do Free Cash Flow Médio por Dimensão de Empresa")
+st.markdown("Comparação entre os fluxos operacionais, de investimento e de financiamento face ao Free Cash Flow líquido.")
+
+# Excluir anos sem dados de fluxos de caixa (registos a zero)
+df_fluxos = filtered_df[filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0].copy()
+
+ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
+df_fluxos["TamanhoEmpresa"] = pd.Categorical(
+    df_fluxos["TamanhoEmpresa"],
+    categories=ordem,
+    ordered=True
+)
+
+# Agregação média por Tamanho de Empresa e Ano
+cols_fluxos = [
+    "TamanhoEmpresa", "Ano",
+    "FluxosCaixa_AtividadesOperacionais",
+    "FluxosCaixa_AtividadesInvestimento",
+    "FluxosCaixa_AtividadesFinanciamento",
+    "FreeCashFlow",
+]
+df_agg = (
+    df_fluxos[cols_fluxos]
+    .groupby(["TamanhoEmpresa", pd.Grouper(key="Ano", freq="ME")], observed=True)
+    .mean()
+    .reset_index()
+)
+
+# Transformar para formato longo (necessário para barras agrupadas por componente)
+df_long = df_agg.melt(
+    id_vars=["TamanhoEmpresa", "Ano"],
+    value_vars=[
+        "FluxosCaixa_AtividadesOperacionais",
+        "FluxosCaixa_AtividadesInvestimento",
+        "FluxosCaixa_AtividadesFinanciamento",
+    ],
+    var_name="Componente",
+    value_name="Valor",
+)
+
+# Renomear componentes para legenda mais legível
+df_long["Componente"] = df_long["Componente"].map({
+    "FluxosCaixa_AtividadesOperacionais":  "Fluxos Operacionais",
+    "FluxosCaixa_AtividadesInvestimento":  "Fluxos de Investimento",
+    "FluxosCaixa_AtividadesFinanciamento": "Fluxos de Financiamento",
+})
+
+# Selector de dimensão de empresa
+tamanho_sel = st.selectbox(
+    "Selecionar dimensão de empresa",
+    options=ordem,
+    index=3,  # default: Grandes empresas
+    key="sel_tamanho_fcf"
+)
+
+df_plot  = df_long[df_long["TamanhoEmpresa"] == tamanho_sel]
+df_fcf   = df_agg[df_agg["TamanhoEmpresa"] == tamanho_sel]
+
+# Paleta de cores fixa por componente
+mapa_cores = {
+    "Fluxos Operacionais":    "#2196F3",
+    "Fluxos de Investimento":  "#FF7043",
+    "Fluxos de Financiamento": "#66BB6A",
+}
+
+import plotly.graph_objects as go
+
+fig3 = go.Figure()
+
+# Barras agrupadas para cada componente
+for componente, cor in mapa_cores.items():
+    df_c = df_plot[df_plot["Componente"] == componente]
+    fig3.add_trace(go.Bar(
+        name=componente,
+        x=df_c["Ano"],
+        y=df_c["Valor"],
+        marker_color=cor,
+        opacity=0.85,
+        hovertemplate=(
+            f"<b>{componente}</b><br>"
+            "Ano: %{x|%Y}<br>"
+            "Valor médio: %{y:,.0f} k€<extra></extra>"
+        ),
+    ))
+
+# Linha pontilhada do Free Cash Flow
+fig3.add_trace(go.Scatter(
+    name="Free Cash Flow",
+    x=df_fcf["Ano"],
+    y=df_fcf["FreeCashFlow"],
+    mode="lines+markers",
+    line=dict(color="#212121", width=2.5, dash="dot"),
+    marker=dict(size=6),
+    hovertemplate=(
+        "<b>Free Cash Flow</b><br>"
+        "Ano: %{x|%Y}<br>"
+        "Valor médio: %{y:,.0f} k€<extra></extra>"
+    ),
+))
+
+# Linha de referência no zero
+fig3.add_hline(y=0, line_width=1, line_color="grey", opacity=0.5)
+
+fig3.update_layout(
+    barmode="group",
+    xaxis_title="Ano",
+    yaxis_title="Média (k€)",
+    yaxis_tickformat=".0f",
+    legend=dict(
+        orientation="h",
+        yanchor="top",
+        y=-0.2,
+        xanchor="left",
+        x=0,
+    ),
+    plot_bgcolor="#FAFAFA",
+    margin=dict(t=40, b=80, l=80, r=40),
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+with st.expander("ℹ️ Como interpretar este gráfico"):
+    st.markdown("""
+- **Fluxos Operacionais** — caixa gerada pela atividade corrente da empresa. Valor positivo e crescente é o sinal mais saudável.
+- **Fluxos de Investimento** — tipicamente negativo em empresas que investem. Um valor positivo pode indicar desinvestimento.
+- **Fluxos de Financiamento** — entradas e saídas de dívida e capital. Valores muito negativos refletem reembolso de dívida.
+- **Free Cash Flow** *(linha pontilhada)* — resultado após subtrair o investimento aos fluxos operacionais.
+
+> ⚠️ **Sinal de alerta:** FCF positivo com Fluxos de Investimento também positivos pode indicar que a empresa vende ativos para sustentar a liquidez.
+""")
+
 # --------------------------------------------------
 # Rodapé
 # --------------------------------------------------
