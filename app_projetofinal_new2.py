@@ -118,6 +118,10 @@ fig.update_yaxes(
         (y_max // 10000 + 1) * 10000
     ]
 )
+fig.update_xaxes(
+    dtick="Y1",
+    tickformat="%Y"
+)
 
 fig.update_layout(
     legend=dict(
