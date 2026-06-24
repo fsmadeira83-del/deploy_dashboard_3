@@ -324,6 +324,132 @@ else:
 
 > ⚠️ **Sinal de alerta:** FCF positivo com Fluxos de Investimento também positivos pode indicar que a empresa vende ativos para sustentar a liquidez.
 """)
+
+st.divider()
+
+# ------------------------------------------------------------------
+# Gráfico 4 - Relação entre RCP e Free Cash Flow
+# ------------------------------------------------------------------
+st.subheader("📊 Relação entre Rendibilidade dos Capitais Próprios (RCP) e Free Cash Flow")
+st.markdown("Análise da relação entre a rendibilidade gerada para os acionistas e a capacidade de geração de caixa, por dimensão de empresa ao longo do tempo.")
+
+# Excluir registos sem dados válidos
+df_rcp_fcf = filtered_df[
+    (filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0) &
+    (filtered_df["RCP"].notna()) &
+    (filtered_df["FreeCashFlow"].notna())
+].copy()
+
+ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
+df_rcp_fcf["TamanhoEmpresa"] = pd.Categorical(
+    df_rcp_fcf["TamanhoEmpresa"],
+    categories=ordem,
+    ordered=True
+)
+
+# Agregação média por Tamanho de Empresa e Ano
+df_agg_rcp = (
+    df_rcp_fcf
+    .groupby(["TamanhoEmpresa", pd.Grouper(key="Ano", freq="ME")], observed=True)[["RCP", "FreeCashFlow"]]
+    .mean()
+    .reset_index()
+)
+
+tamanhos_disponiveis_rcp = [t for t in ordem if t in df_agg_rcp["TamanhoEmpresa"].values]
+n_rcp = len(tamanhos_disponiveis_rcp)
+
+if n_rcp == 0:
+    st.warning("Nenhum dado disponível para os filtros selecionados.")
+else:
+    fig4 = make_subplots(
+        rows=n_rcp,
+        cols=1,
+        shared_xaxes=True,
+        subplot_titles=tamanhos_disponiveis_rcp,
+        vertical_spacing=0.06,
+        specs=[[{"secondary_y": True}]] * n_rcp,
+    )
+
+    legenda_adicionada_rcp = set()
+
+    for i, tamanho in enumerate(tamanhos_disponiveis_rcp, start=1):
+        df_t = df_agg_rcp[df_agg_rcp["TamanhoEmpresa"] == tamanho].sort_values("Ano")
+
+        # Barras — Free Cash Flow (eixo primário)
+        mostrar_fcf = "Free Cash Flow" not in legenda_adicionada_rcp
+        if mostrar_fcf:
+            legenda_adicionada_rcp.add("Free Cash Flow")
+        fig4.add_trace(go.Bar(
+            name="Free Cash Flow",
+            x=df_t["Ano"],
+            y=df_t["FreeCashFlow"],
+            marker_color="#2196F3",
+            opacity=0.75,
+            legendgroup="Free Cash Flow",
+            showlegend=mostrar_fcf,
+            hovertemplate=(
+                "<b>Free Cash Flow</b><br>"
+                "Ano: %{x|%Y}<br>"
+                "Valor médio: %{y:,.0f} k€<extra></extra>"
+            ),
+        ), row=i, col=1, secondary_y=False)
+
+        # Linha — RCP (eixo secundário)
+        mostrar_rcp = "RCP" not in legenda_adicionada_rcp
+        if mostrar_rcp:
+            legenda_adicionada_rcp.add("RCP")
+        fig4.add_trace(go.Scatter(
+            name="RCP",
+            x=df_t["Ano"],
+            y=df_t["RCP"],
+            mode="lines+markers",
+            line=dict(color="#FF7043", width=2.5),
+            marker=dict(size=6),
+            legendgroup="RCP",
+            showlegend=mostrar_rcp,
+            hovertemplate=(
+                "<b>RCP</b><br>"
+                "Ano: %{x|%Y}<br>"
+                "Valor médio: %{y:.2%}<extra></extra>"
+            ),
+        ), row=i, col=1, secondary_y=True)
+
+        fig4.add_hline(y=0, line_width=1, line_color="grey", opacity=0.5, row=i, col=1)
+
+        fig4.update_yaxes(title_text="FCF Médio (k€)", tickformat=".0f",
+                          row=i, col=1, secondary_y=False)
+        fig4.update_yaxes(title_text="RCP (%)", tickformat=".0%",
+                          row=i, col=1, secondary_y=True)
+
+    fig4.update_xaxes(title_text="Ano", row=n_rcp, col=1)
+
+    fig4.update_layout(
+        barmode="group",
+        height=320 * n_rcp,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.05,
+            xanchor="left",
+            x=0,
+        ),
+        plot_bgcolor="#FAFAFA",
+        margin=dict(t=60, b=80, l=80, r=80),
+    )
+
+    st.plotly_chart(fig4, use_container_width=True)
+
+    with st.expander("ℹ️ Como interpretar este gráfico"):
+        st.markdown("""
+- **Free Cash Flow** *(barras azuis)* — caixa gerada após investimento. Reflete a capacidade real de geração de liquidez.
+- **RCP — Rendibilidade dos Capitais Próprios** *(linha laranja, eixo direito)* — mede o retorno gerado para os acionistas em proporção do capital investido.
+
+**Padrões a observar:**
+- **RCP elevado + FCF positivo** → empresa rentável e com boa geração de caixa. Situação ideal.
+- **RCP elevado + FCF negativo** → rentabilidade contabilística não se traduz em caixa. Pode indicar problemas de cobranças ou investimento intensivo.
+- **RCP negativo + FCF positivo** → empresa com prejuízo mas que ainda gera caixa. Situação de alerta a monitorizar.
+- **Ambos negativos** → sinal de forte pressão financeira.
+""")
         
 # --------------------------------------------------
 # Rodapé
