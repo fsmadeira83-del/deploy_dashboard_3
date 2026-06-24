@@ -1,13 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # --------------------------------------------------
 # Configuração da página
 # --------------------------------------------------
 st.set_page_config(
-    page_title="Dados Económico-Financeiros Economia Portuguesa 2006-2024", # O título que mostra na tab do browser
-    layout="wide" # A opção "centered" coloca a página numa coluna central
+    page_title="Dados Económico-Financeiros Economia Portuguesa 2006-2024",
+    layout="wide"
 )
 
 st.title("📊 Dados Económico-Financeiros Economia Portuguesa 2006-2024")
@@ -16,10 +18,7 @@ st.markdown("Dashboard de Free Cash Flow Médio")
 # --------------------------------------------------
 # Carregamento dos dados
 # --------------------------------------------------
-# Esta linha é extremamente importante. 
-# Ao ler o ficheiro a primeira vez, a app guarda os dados em memória (cache)
-# Assim, sempre que houver interações com o dashboard (ex: mudar um filtro), não é necessário ler o ficheiro csv novamente
-@st.cache_data 
+@st.cache_data
 def load_data():
     file_name = "ProjetoFinal_BaseDados.xlsx"
     df = pd.read_excel(file_name, parse_dates=["Ano"])
@@ -32,7 +31,6 @@ df = load_data()
 # --------------------------------------------------
 st.sidebar.header("Filtros")
 
-# Filtro de Sector de Atividade
 sorted_SectorAtividade = sorted(df["SectorAtividade"].unique())
 SectorAtividade = st.sidebar.multiselect(
     "Sector de Atividade",
@@ -40,7 +38,6 @@ SectorAtividade = st.sidebar.multiselect(
     default=sorted_SectorAtividade
 )
 
-# Filtro de Tamanho de Empresa
 sorted_TamanhoEmpresa = sorted(df["TamanhoEmpresa"].unique())
 TamanhoEmpresa = st.sidebar.multiselect(
     "Tamanho de Empresa",
@@ -48,7 +45,6 @@ TamanhoEmpresa = st.sidebar.multiselect(
     default=sorted_TamanhoEmpresa
 )
 
-# Filtro de Ano
 years = sorted(df["Ano"].dt.year.unique())
 year_range = st.sidebar.slider(
     "Ano",
@@ -57,7 +53,6 @@ year_range = st.sidebar.slider(
     value=(int(min(years)), int(max(years)))
 )
 
-# Aplicar filtros
 filtered_df = df[
     (df["SectorAtividade"].isin(SectorAtividade)) &
     (df["TamanhoEmpresa"].isin(TamanhoEmpresa)) &
@@ -73,7 +68,6 @@ media_ResultadoLiquido = filtered_df["RL"].mean()
 media_FreeCashFlow = filtered_df["FreeCashFlow"].mean()
 media_empresas = int(filtered_df["NºEmpresas"].mean())
 
-# Vamos dividir a área em 3 colunas para mostrar os KPIs lado a lado
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("💰 Vendas Médias", f"k€ {media_VendasServicos:,.0f}".replace(",", "."))
 col2.metric("📈 Lucro Médio", f"k€ {media_ResultadoLiquido:,.0f}".replace(",", "."))
@@ -83,12 +77,13 @@ col4.metric("🧾 N.º Médio de Empresas", media_empresas)
 st.divider()
 
 # --------------------------------------------------
-# Gráfico 1 - Free Cash Flow Médio ao longo do tempo
+# Gráfico 1 - Area Chart: FCF Médio ao longo do tempo
+# ALTERAÇÃO: px.line → px.area com fill, para comunicar
+# melhor a magnitude dos valores e reduzir o ruído visual
+# quando existem muitos sectores.
 # --------------------------------------------------
-# Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
 
-# Agrupar a média de Free Cash Flow em cada ano por Sector de Atividade
 freecashflow_over_time = (
     filtered_df
     .groupby(
@@ -98,20 +93,17 @@ freecashflow_over_time = (
     .reset_index()
 )
 
-fig = px.line(
+fig = px.area(
     freecashflow_over_time,
     x="Ano",
     y="FreeCashFlow",
-    color="SectorAtividade"
+    color="SectorAtividade",
+    line_group="SectorAtividade",
 )
 
-# Calcular o intervalo do eixo Y com base nos dados
-y_min = freecashflow_over_time["FreeCashFlow"].min()
-y_max = freecashflow_over_time["FreeCashFlow"].max()
+fig.update_traces(opacity=0.45)
 
-fig.update_yaxes(
-    tickformat=".0f"
-)
+fig.update_yaxes(tickformat=".0f")
 
 fig.update_layout(
     legend=dict(
@@ -123,14 +115,15 @@ fig.update_layout(
     )
 )
 
-st.plotly_chart(fig)
+st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------------------------------
-# Gráfico 2 - Free Cash Flow Médio por Tamanho da Empresa
+# Gráfico 2 - Lollipop Chart: FCF Médio por Tamanho da Empresa
+# ALTERAÇÃO: px.bar → lollipop chart (linha + marcador),
+# mais moderno e minimalista para apenas 4 categorias ordenadas.
 # -------------------------------------------------------
-st.subheader("🌍 Free Cash Flow Médio por Tamanho da Empresa")
+st.subheader("🏢 Free Cash Flow Médio por Tamanho da Empresa")
 
-# Agrupar a média de Free Cash Flow por Tamanho da Empresa
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
 filtered_df["TamanhoEmpresa"] = pd.Categorical(
     filtered_df["TamanhoEmpresa"],
@@ -145,24 +138,50 @@ freecashflow_by_size = (
     .reset_index()
 )
 
-fig = px.bar(
-    freecashflow_by_size,
-    x="TamanhoEmpresa",
-    y="FreeCashFlow"
+fig_lollipop = go.Figure()
+
+# Traços horizontais (caule do lollipop)
+for _, row in freecashflow_by_size.iterrows():
+    fig_lollipop.add_shape(
+        type="line",
+        x0=0, x1=row["FreeCashFlow"],
+        y0=row["TamanhoEmpresa"], y1=row["TamanhoEmpresa"],
+        line=dict(color="#2196F3", width=2.5)
+    )
+
+# Marcadores (cabeça do lollipop)
+fig_lollipop.add_trace(go.Scatter(
+    x=freecashflow_by_size["FreeCashFlow"],
+    y=freecashflow_by_size["TamanhoEmpresa"],
+    mode="markers",
+    marker=dict(color="#2196F3", size=14, line=dict(color="white", width=2)),
+    text=freecashflow_by_size["FreeCashFlow"].apply(lambda v: f"{v:,.0f} k€"),
+    textposition="middle right",
+    hovertemplate="<b>%{y}</b><br>FCF Médio: %{x:,.0f} k€<extra></extra>",
+))
+
+fig_lollipop.update_layout(
+    xaxis=dict(title="FCF Médio (k€)", tickformat=".0f", zeroline=True,
+               zerolinecolor="lightgrey", zerolinewidth=1),
+    yaxis=dict(title="", categoryorder="array", categoryarray=ordem),
+    showlegend=False,
+    plot_bgcolor="#FAFAFA",
+    margin=dict(l=150, r=80, t=20, b=40),
+    height=280,
 )
 
-fig.update_yaxes(tickformat=".0f")
-
-st.plotly_chart(fig)
+st.plotly_chart(fig_lollipop, use_container_width=True)
 
 st.divider()
 
 # --------------------------------------------------------------------
-# Table - Top Sectores de Atividade com Maiores Free Cash Flows Médios
+# Ranking - Top 10 Sectores com Barras Horizontais
+# ALTERAÇÃO: st.dataframe simples → gráfico de barras horizontal,
+# muito mais intuitivo para rankings; elimina a necessidade de
+# comparar números manualmente.
 # --------------------------------------------------------------------
 st.subheader("🏆 Top 10 Sectores por Free Cash Flow (Médias Anuais)")
 
-# Agrupar a média de Free Cash Flow por Setor de Atividade, ordenar e mostrar os top 10
 top_sectores = (
     filtered_df
     .groupby("SectorAtividade")["FreeCashFlow"]
@@ -170,20 +189,46 @@ top_sectores = (
     .sort_values(ascending=False)
     .head(10)
     .round(0)
+    .reset_index()
+)
+top_sectores.columns = ["SectorAtividade", "FreeCashFlow"]
+top_sectores_sorted = top_sectores.sort_values("FreeCashFlow", ascending=True)
+
+fig_ranking = go.Figure(go.Bar(
+    x=top_sectores_sorted["FreeCashFlow"],
+    y=top_sectores_sorted["SectorAtividade"],
+    orientation="h",
+    marker=dict(
+        color=top_sectores_sorted["FreeCashFlow"],
+        colorscale="Blues",
+        showscale=False,
+    ),
+    text=top_sectores_sorted["FreeCashFlow"].apply(lambda v: f"{v:,.0f} k€"),
+    textposition="outside",
+    hovertemplate="<b>%{y}</b><br>FCF Médio: %{x:,.0f} k€<extra></extra>",
+))
+
+fig_ranking.update_layout(
+    xaxis=dict(title="FCF Médio (k€)", tickformat=".0f"),
+    yaxis=dict(title=""),
+    plot_bgcolor="#FAFAFA",
+    margin=dict(l=20, r=100, t=20, b=40),
+    height=400,
 )
 
-st.dataframe(top_sectores)
+st.plotly_chart(fig_ranking, use_container_width=True)
 
 st.divider()
 
 # ------------------------------------------------------------------
-# Gráfico 3 - Decomposição do Free Cash Flow por Componente
+# Gráfico 3 - Decomposição do FCF por Componente
+# ALTERAÇÃO: barmode="group" → barmode="relative" (barras empilhadas
+# com valores negativos abaixo do zero e positivos acima), padrão
+# em bridge/waterfall charts financeiros; comunica de imediato quais
+# componentes "drenam" ou "alimentam" a caixa.
 # ------------------------------------------------------------------
 st.subheader("🔍 Decomposição do Free Cash Flow Médio por Dimensão de Empresa")
 st.markdown("Comparação entre os fluxos operacionais, de investimento e de financiamento face ao Free Cash Flow líquido.")
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
 df_fluxos = filtered_df[filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0].copy()
@@ -193,7 +238,6 @@ df_fluxos["TamanhoEmpresa"] = pd.Categorical(
     ordered=True
 )
 
-# Agregação média por Tamanho de Empresa e Ano
 cols_fluxos = [
     "TamanhoEmpresa", "Ano",
     "FluxosCaixa_AtividadesOperacionais",
@@ -208,7 +252,6 @@ df_agg = (
     .reset_index()
 )
 
-# Transformar para formato longo
 df_long = df_agg.melt(
     id_vars=["TamanhoEmpresa", "Ano"],
     value_vars=[
@@ -232,7 +275,6 @@ mapa_cores = {
     "Fluxos de Financiamento": "#66BB6A",
 }
 
-# Tamanhos presentes após aplicação do filtro lateral
 tamanhos_disponiveis = [t for t in ordem if t in df_agg["TamanhoEmpresa"].values]
 n = len(tamanhos_disponiveis)
 
@@ -297,8 +339,9 @@ else:
 
     fig3.update_xaxes(title_text="Ano", row=n, col=1)
 
+    # ALTERAÇÃO PRINCIPAL: barmode="relative" em vez de "group"
     fig3.update_layout(
-        barmode="group",
+        barmode="relative",
         height=320 * n,
         legend=dict(
             orientation="h",
@@ -327,11 +370,12 @@ st.divider()
 
 # ------------------------------------------------------------------
 # Gráfico 4 - Relação entre RCP e Free Cash Flow
+# (sem alterações — a estrutura dual-axis já é adequada para
+# esta comparação específica entre duas métricas de escalas distintas)
 # ------------------------------------------------------------------
 st.subheader("📊 Relação entre Rendibilidade dos Capitais Próprios (RCP) e Free Cash Flow")
 st.markdown("Análise da relação entre a rendibilidade gerada para os acionistas e a capacidade de geração de caixa, por dimensão de empresa ao longo do tempo.")
 
-# Excluir registos sem dados válidos
 df_rcp_fcf = filtered_df[
     (filtered_df["RCP"].notna()) &
     (filtered_df["FreeCashFlow"].notna())
@@ -344,7 +388,6 @@ df_rcp_fcf["TamanhoEmpresa"] = pd.Categorical(
     ordered=True
 )
 
-# Agregação média por Tamanho de Empresa e Ano
 df_agg_rcp = (
     df_rcp_fcf
     .groupby(["TamanhoEmpresa", pd.Grouper(key="Ano", freq="ME")], observed=True)[["RCP", "FreeCashFlow"]]
@@ -372,7 +415,6 @@ else:
     for i, tamanho in enumerate(tamanhos_disponiveis_rcp, start=1):
         df_t = df_agg_rcp[df_agg_rcp["TamanhoEmpresa"] == tamanho].sort_values("Ano")
 
-        # Barras — Free Cash Flow (eixo primário)
         mostrar_fcf = "Free Cash Flow" not in legenda_adicionada_rcp
         if mostrar_fcf:
             legenda_adicionada_rcp.add("Free Cash Flow")
@@ -391,7 +433,6 @@ else:
             ),
         ), row=i, col=1, secondary_y=False)
 
-        # Linha — RCP (eixo secundário)
         mostrar_rcp = "RCP" not in legenda_adicionada_rcp
         if mostrar_rcp:
             legenda_adicionada_rcp.add("RCP")
@@ -447,7 +488,7 @@ else:
 - **RCP negativo + FCF positivo** → empresa com prejuízo mas que ainda gera caixa. Situação de alerta a monitorizar.
 - **Ambos negativos** → sinal de forte pressão financeira.
 """)
-        
+
 # --------------------------------------------------
 # Rodapé
 # --------------------------------------------------
