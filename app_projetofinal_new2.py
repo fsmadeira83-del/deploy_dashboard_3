@@ -186,6 +186,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
+df_fluxos = filtered_df[filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0].copy()
 df_fluxos["TamanhoEmpresa"] = pd.Categorical(
     df_fluxos["TamanhoEmpresa"].astype(str),
     categories=ordem,
