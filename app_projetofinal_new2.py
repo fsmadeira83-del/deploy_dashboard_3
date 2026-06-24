@@ -118,7 +118,7 @@ fig.update_yaxes(
 )
 
 fig.update_xaxes(
-    dtick="M1",
+    dtick="Y1",
     tickformat="%b %Y"
 )
 
