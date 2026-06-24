@@ -187,7 +187,7 @@ from plotly.subplots import make_subplots
 
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
 df_fluxos["TamanhoEmpresa"] = pd.Categorical(
-    df_fluxos["TamanhoEmpresa"],
+    df_fluxos["TamanhoEmpresa"].astype(str),
     categories=ordem,
     ordered=True
 )
