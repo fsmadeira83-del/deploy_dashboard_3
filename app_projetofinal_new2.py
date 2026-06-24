@@ -78,9 +78,6 @@ st.divider()
 
 # --------------------------------------------------
 # Gráfico 1 - Area Chart: FCF Médio ao longo do tempo
-# ALTERAÇÃO: px.line → px.area com fill, para comunicar
-# melhor a magnitude dos valores e reduzir o ruído visual
-# quando existem muitos sectores.
 # --------------------------------------------------
 st.subheader("📅 Free Cash Flow Médio ao longo do tempo por Sector de Atividade")
 
@@ -118,9 +115,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------------------------------
-# Gráfico 2 - Lollipop Chart: FCF Médio por Tamanho da Empresa
-# ALTERAÇÃO: px.bar → lollipop chart (linha + marcador),
-# mais moderno e minimalista para apenas 4 categorias ordenadas.
+# Gráfico 2 - Barras Empilhadas: FCF Médio por Tamanho da Empresa e Ano
 # -------------------------------------------------------
 st.subheader("🏢 Free Cash Flow Médio por Tamanho da Empresa")
 
@@ -131,54 +126,61 @@ filtered_df["TamanhoEmpresa"] = pd.Categorical(
     ordered=True
 )
 
-freecashflow_by_size = (
+freecashflow_by_size_year = (
     filtered_df
-    .groupby("TamanhoEmpresa", observed=True)["FreeCashFlow"]
+    .groupby(["Ano", "TamanhoEmpresa"], observed=True)["FreeCashFlow"]
     .mean()
     .reset_index()
 )
+freecashflow_by_size_year["Ano"] = freecashflow_by_size_year["Ano"].dt.year
 
-fig_lollipop = go.Figure()
+mapa_cores = {
+    "Microempresas":     "#185FA5",
+    "Pequenas empresas": "#0F6E56",
+    "Médias empresas":   "#BA7517",
+    "Grandes empresas":  "#993556",
+}
 
-# Traços horizontais (caule do lollipop)
-for _, row in freecashflow_by_size.iterrows():
-    fig_lollipop.add_shape(
-        type="line",
-        x0=0, x1=row["FreeCashFlow"],
-        y0=row["TamanhoEmpresa"], y1=row["TamanhoEmpresa"],
-        line=dict(color="#2196F3", width=2.5)
-    )
+fig2 = go.Figure()
 
-# Marcadores (cabeça do lollipop)
-fig_lollipop.add_trace(go.Scatter(
-    x=freecashflow_by_size["FreeCashFlow"],
-    y=freecashflow_by_size["TamanhoEmpresa"],
-    mode="markers",
-    marker=dict(color="#2196F3", size=14, line=dict(color="white", width=2)),
-    text=freecashflow_by_size["FreeCashFlow"].apply(lambda v: f"{v:,.0f} k€"),
-    textposition="middle right",
-    hovertemplate="<b>%{y}</b><br>FCF Médio: %{x:,.0f} k€<extra></extra>",
-))
+for tamanho in ordem:
+    df_t = freecashflow_by_size_year[freecashflow_by_size_year["TamanhoEmpresa"] == tamanho]
+    fig2.add_trace(go.Bar(
+        name=tamanho,
+        x=df_t["Ano"],
+        y=df_t["FreeCashFlow"],
+        marker_color=mapa_cores[tamanho],
+        opacity=0.85,
+        hovertemplate=(
+            f"<b>{tamanho}</b><br>"
+            "Ano: %{x}<br>"
+            "FCF Médio: %{y:,.0f} k€<extra></extra>"
+        ),
+    ))
 
-fig_lollipop.update_layout(
-    xaxis=dict(title="FCF Médio (k€)", tickformat=".0f", zeroline=True,
-               zerolinecolor="lightgrey", zerolinewidth=1),
-    yaxis=dict(title="", categoryorder="array", categoryarray=ordem),
-    showlegend=False,
+fig2.update_yaxes(tickformat=".0f")
+
+fig2.update_layout(
+    barmode="stack",
+    xaxis=dict(title="Ano", dtick=1),
+    yaxis=dict(title="FCF Médio (k€)", tickformat=".0f"),
+    legend=dict(
+        orientation="h",
+        yanchor="top",
+        y=-0.2,
+        xanchor="left",
+        x=0,
+    ),
     plot_bgcolor="#FAFAFA",
-    margin=dict(l=150, r=80, t=20, b=40),
-    height=280,
+    margin=dict(t=20, b=80, l=80, r=40),
 )
 
-st.plotly_chart(fig_lollipop, use_container_width=True)
+st.plotly_chart(fig2, use_container_width=True)
 
 st.divider()
 
 # --------------------------------------------------------------------
 # Ranking - Top 10 Sectores com Barras Horizontais
-# ALTERAÇÃO: st.dataframe simples → gráfico de barras horizontal,
-# muito mais intuitivo para rankings; elimina a necessidade de
-# comparar números manualmente.
 # --------------------------------------------------------------------
 st.subheader("🏆 Top 10 Sectores por Free Cash Flow (Médias Anuais)")
 
@@ -222,10 +224,6 @@ st.divider()
 
 # ------------------------------------------------------------------
 # Gráfico 3 - Decomposição do FCF por Componente
-# ALTERAÇÃO: barmode="group" → barmode="relative" (barras empilhadas
-# com valores negativos abaixo do zero e positivos acima), padrão
-# em bridge/waterfall charts financeiros; comunica de imediato quais
-# componentes "drenam" ou "alimentam" a caixa.
 # ------------------------------------------------------------------
 st.subheader("🔍 Decomposição do Free Cash Flow Médio por Dimensão de Empresa")
 st.markdown("Comparação entre os fluxos operacionais, de investimento e de financiamento face ao Free Cash Flow líquido.")
@@ -370,8 +368,6 @@ st.divider()
 
 # ------------------------------------------------------------------
 # Gráfico 4 - Relação entre RCP e Free Cash Flow
-# (sem alterações — a estrutura dual-axis já é adequada para
-# esta comparação específica entre duas métricas de escalas distintas)
 # ------------------------------------------------------------------
 st.subheader("📊 Relação entre Rendibilidade dos Capitais Próprios (RCP) e Free Cash Flow")
 st.markdown("Análise da relação entre a rendibilidade gerada para os acionistas e a capacidade de geração de caixa, por dimensão de empresa ao longo do tempo.")
