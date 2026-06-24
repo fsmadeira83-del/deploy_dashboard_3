@@ -178,7 +178,7 @@ top_sectores = (
 
 st.dataframe(top_sectores)
 
-pythonst.divider()
+st.divider()
 
 # ------------------------------------------------------------------
 # Gráfico 3 - Decomposição do Free Cash Flow por Componente
