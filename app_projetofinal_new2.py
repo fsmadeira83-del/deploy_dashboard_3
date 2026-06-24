@@ -50,7 +50,7 @@ year_range = st.sidebar.slider(
     "Ano",
     min_value=int('2010'),
     max_value=int(max(years)),
-    value=('2010'), int(max(years))
+    value=('2010', int(max(years)))
 )
 
 filtered_df = df[
