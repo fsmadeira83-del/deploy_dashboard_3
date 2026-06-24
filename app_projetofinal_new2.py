@@ -186,6 +186,9 @@ st.divider()
 st.subheader("🔍 Decomposição do Free Cash Flow Médio por Dimensão de Empresa")
 st.markdown("Comparação entre os fluxos operacionais, de investimento e de financiamento face ao Free Cash Flow líquido.")
 
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 # Excluir anos sem dados de fluxos de caixa (registos a zero)
 df_fluxos = filtered_df[filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0].copy()
 
@@ -211,7 +214,7 @@ df_agg = (
     .reset_index()
 )
 
-# Transformar para formato longo (necessário para barras agrupadas por componente)
+# Transformar para formato longo
 df_long = df_agg.melt(
     id_vars=["TamanhoEmpresa", "Ano"],
     value_vars=[
@@ -223,72 +226,91 @@ df_long = df_agg.melt(
     value_name="Valor",
 )
 
-# Renomear componentes para legenda mais legível
 df_long["Componente"] = df_long["Componente"].map({
     "FluxosCaixa_AtividadesOperacionais":  "Fluxos Operacionais",
     "FluxosCaixa_AtividadesInvestimento":  "Fluxos de Investimento",
     "FluxosCaixa_AtividadesFinanciamento": "Fluxos de Financiamento",
 })
 
-# Paleta de cores fixa por componente
 mapa_cores = {
-    "Fluxos Operacionais":    "#2196F3",
+    "Fluxos Operacionais":     "#2196F3",
     "Fluxos de Investimento":  "#FF7043",
     "Fluxos de Financiamento": "#66BB6A",
 }
 
-import plotly.graph_objects as go
+tamanhos_disponiveis = [t for t in ordem if t in df_agg["TamanhoEmpresa"].cat.categories and t in df_agg["TamanhoEmpresa"].values]
+n = len(tamanhos_disponiveis)
 
-fig3 = go.Figure()
+fig3 = make_subplots(
+    rows=n,
+    cols=1,
+    shared_xaxes=True,
+    subplot_titles=tamanhos_disponiveis,
+    vertical_spacing=0.06,
+)
 
-# Barras agrupadas para cada componente
-for componente, cor in mapa_cores.items():
-    df_c = df_plot[df_plot["Componente"] == componente]
-    fig3.add_trace(go.Bar(
-        name=componente,
-        x=df_c["Ano"],
-        y=df_c["Valor"],
-        marker_color=cor,
-        opacity=0.85,
+legenda_adicionada = set()
+
+for i, tamanho in enumerate(tamanhos_disponiveis, start=1):
+    df_t    = df_long[df_long["TamanhoEmpresa"] == tamanho]
+    df_fcf  = df_agg[df_agg["TamanhoEmpresa"] == tamanho]
+
+    for componente, cor in mapa_cores.items():
+        df_c = df_t[df_t["Componente"] == componente]
+        mostrar_legenda = componente not in legenda_adicionada
+        if mostrar_legenda:
+            legenda_adicionada.add(componente)
+        fig3.add_trace(go.Bar(
+            name=componente,
+            x=df_c["Ano"],
+            y=df_c["Valor"],
+            marker_color=cor,
+            opacity=0.85,
+            legendgroup=componente,
+            showlegend=mostrar_legenda,
+            hovertemplate=(
+                f"<b>{componente}</b><br>"
+                "Ano: %{x|%Y}<br>"
+                "Valor médio: %{y:,.0f} k€<extra></extra>"
+            ),
+        ), row=i, col=1)
+
+    mostrar_legenda_fcf = "Free Cash Flow" not in legenda_adicionada
+    if mostrar_legenda_fcf:
+        legenda_adicionada.add("Free Cash Flow")
+    fig3.add_trace(go.Scatter(
+        name="Free Cash Flow",
+        x=df_fcf["Ano"],
+        y=df_fcf["FreeCashFlow"],
+        mode="lines+markers",
+        line=dict(color="#212121", width=2.5, dash="dot"),
+        marker=dict(size=6),
+        legendgroup="Free Cash Flow",
+        showlegend=mostrar_legenda_fcf,
         hovertemplate=(
-            f"<b>{componente}</b><br>"
+            "<b>Free Cash Flow</b><br>"
             "Ano: %{x|%Y}<br>"
             "Valor médio: %{y:,.0f} k€<extra></extra>"
         ),
-    ))
+    ), row=i, col=1)
 
-# Linha pontilhada do Free Cash Flow
-fig3.add_trace(go.Scatter(
-    name="Free Cash Flow",
-    x=df_fcf["Ano"],
-    y=df_fcf["FreeCashFlow"],
-    mode="lines+markers",
-    line=dict(color="#212121", width=2.5, dash="dot"),
-    marker=dict(size=6),
-    hovertemplate=(
-        "<b>Free Cash Flow</b><br>"
-        "Ano: %{x|%Y}<br>"
-        "Valor médio: %{y:,.0f} k€<extra></extra>"
-    ),
-))
+    fig3.add_hline(y=0, line_width=1, line_color="grey", opacity=0.5, row=i, col=1)
+    fig3.update_yaxes(title_text="Média (k€)", tickformat=".0f", row=i, col=1)
 
-# Linha de referência no zero
-fig3.add_hline(y=0, line_width=1, line_color="grey", opacity=0.5)
+fig3.update_xaxes(title_text="Ano", row=n, col=1)
 
 fig3.update_layout(
     barmode="group",
-    xaxis_title="Ano",
-    yaxis_title="Média (k€)",
-    yaxis_tickformat=".0f",
+    height=320 * n,
     legend=dict(
         orientation="h",
         yanchor="top",
-        y=-0.2,
+        y=-0.05,
         xanchor="left",
         x=0,
     ),
     plot_bgcolor="#FAFAFA",
-    margin=dict(t=40, b=80, l=80, r=40),
+    margin=dict(t=60, b=80, l=80, r=40),
 )
 
 st.plotly_chart(fig3, use_container_width=True)
@@ -302,7 +324,6 @@ with st.expander("ℹ️ Como interpretar este gráfico"):
 
 > ⚠️ **Sinal de alerta:** FCF positivo com Fluxos de Investimento também positivos pode indicar que a empresa vende ativos para sustentar a liquidez.
 """)
-
 # --------------------------------------------------
 # Rodapé
 # --------------------------------------------------
