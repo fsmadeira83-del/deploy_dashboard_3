@@ -62,6 +62,7 @@ filtered_df = df[
     (df["SectorAtividade"].isin(SectorAtividade)) &
     (df["TamanhoEmpresa"].isin(TamanhoEmpresa)) &
     (df["Ano"].dt.year.between(year_range[0], year_range[1]))
+filtered_df = filtered_df[filtered_df["FreeCashFlow"] != 0]
 ]
 
 # --------------------------------------------------
@@ -183,10 +184,6 @@ st.markdown("Comparação entre os fluxos operacionais, de investimento e de fin
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
-# Excluir anos sem dados de fluxos de caixa (registos a zero)
-# O filtered_df já tem o filtro de TamanhoEmpresa aplicado mais atrás
-df_fluxos = filtered_df[filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0].copy()
 
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
 df_fluxos["TamanhoEmpresa"] = pd.Categorical(
@@ -335,7 +332,6 @@ st.markdown("Análise da relação entre a rendibilidade gerada para os acionist
 
 # Excluir registos sem dados válidos
 df_rcp_fcf = filtered_df[
-    (filtered_df["FluxosCaixa_AtividadesOperacionais"] != 0) &
     (filtered_df["RCP"].notna()) &
     (filtered_df["FreeCashFlow"].notna())
 ].copy()
