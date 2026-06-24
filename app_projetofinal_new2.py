@@ -325,7 +325,7 @@ else:
 - **Fluxos Operacionais** — caixa gerada pela atividade corrente da empresa. Valor positivo e crescente é o sinal mais saudável.
 - **Fluxos de Investimento** — tipicamente negativo em empresas que investem. Um valor positivo pode indicar desinvestimento.
 - **Fluxos de Financiamento** — entradas e saídas de dívida e capital. Valores muito negativos refletem reembolso de dívida.
-- **Free Cash Flow** *(linha pontilhada)* — resultado após subtrair o investimento aos fluxos operacionais.
+- **Free Cash Flow** *(linha pontilhada)* — resultado após subtrair os fluxos de investimento e de financiamento aos fluxos operacionais.
 
 > ⚠️ **Sinal de alerta:** FCF positivo com Fluxos de Investimento também positivos pode indicar que a empresa vende ativos para sustentar a liquidez.
 """)
