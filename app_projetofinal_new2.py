@@ -418,7 +418,7 @@ else:
 
         fig4.update_yaxes(title_text="FCF Médio (k€)", tickformat=".0f",
                           row=i, col=1, secondary_y=False)
-        fig4.update_yaxes(title_text="RCP (%)", tickformat=".0%",
+        fig4.update_yaxes(title_text="RCP (%)", tickformat=".1%",
                           row=i, col=1, secondary_y=True)
 
     fig4.update_xaxes(title_text="Ano", row=n_rcp, col=1)
