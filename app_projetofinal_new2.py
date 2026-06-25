@@ -366,53 +366,53 @@ else:
 st.divider()
 
 # ------------------------------------------------------------------
-# Gráfico 4 - Relação entre RCP e Free Cash Flow
+# Gráfico 4 - Relação entre RL e Free Cash Flow
 # ------------------------------------------------------------------
-st.subheader("📊 Relação entre Rendibilidade dos Capitais Próprios (RCP) e Free Cash Flow")
-st.markdown("Análise da relação entre a rendibilidade gerada para os acionistas e a capacidade de geração de caixa, por dimensão de empresa ao longo do tempo.")
+st.subheader("📊 Relação entre Resultado Líquido (RL) e Free Cash Flow")
+st.markdown("Análise da relação entre o resultado líquido e a capacidade de geração de caixa, por dimensão de empresa ao longo do tempo.")
 
-df_rcp_fcf = filtered_df[
-    (filtered_df["RCP"].notna()) &
+df_rl_fcf = filtered_df[
+    (filtered_df["RL"].notna()) &
     (filtered_df["FreeCashFlow"].notna())
 ].copy()
 
 ordem = ["Microempresas", "Pequenas empresas", "Médias empresas", "Grandes empresas"]
-df_rcp_fcf["TamanhoEmpresa"] = pd.Categorical(
-    df_rcp_fcf["TamanhoEmpresa"],
+df_rl_fcf["TamanhoEmpresa"] = pd.Categorical(
+    df_rl_fcf["TamanhoEmpresa"],
     categories=ordem,
     ordered=True
 )
 
-df_agg_rcp = (
-    df_rcp_fcf
-    .groupby(["TamanhoEmpresa", pd.Grouper(key="Ano", freq="ME")], observed=True)[["RCP", "FreeCashFlow"]]
+df_agg_rl = (
+    df_rl_fcf
+    .groupby(["TamanhoEmpresa", pd.Grouper(key="Ano", freq="ME")], observed=True)[["RL", "FreeCashFlow"]]
     .mean()
     .reset_index()
 )
 
-tamanhos_disponiveis_rcp = [t for t in ordem if t in df_agg_rcp["TamanhoEmpresa"].values]
-n_rcp = len(tamanhos_disponiveis_rcp)
+tamanhos_disponiveis_rl = [t for t in ordem if t in df_agg_rl["TamanhoEmpresa"].values]
+n_rl = len(tamanhos_disponiveis_rl)
 
-if n_rcp == 0:
+if n_rl == 0:
     st.warning("Nenhum dado disponível para os filtros selecionados.")
 else:
     fig4 = make_subplots(
-        rows=n_rcp,
+        rows=n_rl,
         cols=1,
         shared_xaxes=True,
-        subplot_titles=tamanhos_disponiveis_rcp,
+        subplot_titles=tamanhos_disponiveis_rl,
         vertical_spacing=0.06,
-        specs=[[{"secondary_y": True}]] * n_rcp,
+        specs=[[{"secondary_y": True}]] * n_rl,
     )
 
-    legenda_adicionada_rcp = set()
+    legenda_adicionada_rl = set()
 
-    for i, tamanho in enumerate(tamanhos_disponiveis_rcp, start=1):
-        df_t = df_agg_rcp[df_agg_rcp["TamanhoEmpresa"] == tamanho].sort_values("Ano")
+    for i, tamanho in enumerate(tamanhos_disponiveis_rl, start=1):
+        df_t = df_agg_rl[df_agg_rl["TamanhoEmpresa"] == tamanho].sort_values("Ano")
 
-        mostrar_fcf = "Free Cash Flow" not in legenda_adicionada_rcp
+        mostrar_fcf = "Free Cash Flow" not in legenda_adicionada_rl
         if mostrar_fcf:
-            legenda_adicionada_rcp.add("Free Cash Flow")
+            legenda_adicionada_rl.add("Free Cash Flow")
         fig4.add_trace(go.Bar(
             name="Free Cash Flow",
             x=df_t["Ano"],
@@ -428,22 +428,22 @@ else:
             ),
         ), row=i, col=1, secondary_y=False)
 
-        mostrar_rcp = "RCP" not in legenda_adicionada_rcp
-        if mostrar_rcp:
-            legenda_adicionada_rcp.add("RCP")
+        mostrar_rl = "RL" not in legenda_adicionada_rl
+        if mostrar_rl:
+            legenda_adicionada_rl.add("RL")
         fig4.add_trace(go.Scatter(
-            name="RCP",
+            name="RL",
             x=df_t["Ano"],
-            y=df_t["RCP"],
+            y=df_t["RL"],
             mode="lines+markers",
             line=dict(color="#FF7043", width=2.5),
             marker=dict(size=6),
-            legendgroup="RCP",
-            showlegend=mostrar_rcp,
+            legendgroup="RL",
+            showlegend=mostrar_rl,
             hovertemplate=(
-                "<b>RCP</b><br>"
+                "<b>Resultado Líquido</b><br>"
                 "Ano: %{x|%Y}<br>"
-                "Valor médio: %{y:.2%}<extra></extra>"
+                "Valor médio: %{y:,.0f} k€<extra></extra>"
             ),
         ), row=i, col=1, secondary_y=True)
 
@@ -451,14 +451,14 @@ else:
 
         fig4.update_yaxes(title_text="FCF Médio (k€)", tickformat=".0f",
                           row=i, col=1, secondary_y=False)
-        fig4.update_yaxes(title_text="RCP (%)", tickformat=".1%",
+        fig4.update_yaxes(title_text="RL Médio (k€)", tickformat=".0f",
                           row=i, col=1, secondary_y=True)
 
-    fig4.update_xaxes(title_text="Ano", row=n_rcp, col=1)
+    fig4.update_xaxes(title_text="Ano", row=n_rl, col=1)
 
     fig4.update_layout(
         barmode="group",
-        height=320 * n_rcp,
+        height=320 * n_rl,
         legend=dict(
             orientation="h",
             yanchor="top",
@@ -475,12 +475,12 @@ else:
     with st.expander("ℹ️ Como interpretar este gráfico"):
         st.markdown("""
 - **Free Cash Flow** *(barras azuis)* — caixa gerada após investimento. Reflete a capacidade real de geração de liquidez.
-- **RCP — Rendibilidade dos Capitais Próprios** *(linha laranja, eixo direito)* — mede o retorno gerado para os acionistas em proporção do capital investido.
+- **Resultado Líquido (RL)** *(linha laranja, eixo direito)* — lucro ou prejuízo contabilístico do exercício.
 
 **Padrões a observar:**
-- **RCP elevado + FCF positivo** → empresa rentável e com boa geração de caixa. Situação ideal.
-- **RCP elevado + FCF negativo** → rentabilidade contabilística não se traduz em caixa. Pode indicar problemas de cobranças ou investimento intensivo.
-- **RCP negativo + FCF positivo** → empresa com prejuízo mas que ainda gera caixa. Situação de alerta a monitorizar.
+- **RL positivo + FCF positivo** → empresa rentável e com boa geração de caixa. Situação ideal.
+- **RL positivo + FCF negativo** → lucro contabilístico não se traduz em caixa. Pode indicar problemas de cobranças ou investimento intensivo.
+- **RL negativo + FCF positivo** → empresa com prejuízo mas que ainda gera caixa. Situação de alerta a monitorizar.
 - **Ambos negativos** → sinal de forte pressão financeira.
 """)
 
