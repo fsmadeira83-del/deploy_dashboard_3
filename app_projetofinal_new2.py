@@ -76,6 +76,49 @@ col4.metric("🧾 N.º Médio de Empresas", media_empresas)
 
 st.divider()
 
+# --------------------------------------------------------------------
+# Ranking - Top 10 Sectores com Barras Horizontais
+# --------------------------------------------------------------------
+st.subheader("🏆 Top 10 Sectores por Free Cash Flow (Médias Anuais)")
+
+top_sectores = (
+    filtered_df
+    .groupby("SectorAtividade")["FreeCashFlow"]
+    .mean()
+    .sort_values(ascending=False)
+    .head(10)
+    .round(0)
+    .reset_index()
+)
+top_sectores.columns = ["SectorAtividade", "FreeCashFlow"]
+top_sectores_sorted = top_sectores.sort_values("FreeCashFlow", ascending=True)
+
+fig_ranking = go.Figure(go.Bar(
+    x=top_sectores_sorted["FreeCashFlow"],
+    y=top_sectores_sorted["SectorAtividade"],
+    orientation="h",
+    marker=dict(
+        color=top_sectores_sorted["FreeCashFlow"],
+        colorscale="Blues",
+        showscale=False,
+    ),
+    text=top_sectores_sorted["FreeCashFlow"].apply(lambda v: f"{v:,.0f} k€"),
+    textposition="outside",
+    hovertemplate="<b>%{y}</b><br>FCF Médio: %{x:,.0f} k€<extra></extra>",
+))
+
+fig_ranking.update_layout(
+    xaxis=dict(title="FCF Médio (k€)", tickformat=".0f"),
+    yaxis=dict(title=""),
+    plot_bgcolor="#FAFAFA",
+    margin=dict(l=20, r=100, t=20, b=40),
+    height=400,
+)
+
+st.plotly_chart(fig_ranking, use_container_width=True)
+
+st.divider()
+
 # --------------------------------------------------
 # Gráfico 1 - Area Chart: FCF Médio ao longo do tempo
 # --------------------------------------------------
@@ -175,49 +218,6 @@ fig2.update_layout(
 )
 
 st.plotly_chart(fig2, use_container_width=True)
-
-st.divider()
-
-# --------------------------------------------------------------------
-# Ranking - Top 10 Sectores com Barras Horizontais
-# --------------------------------------------------------------------
-st.subheader("🏆 Top 10 Sectores por Free Cash Flow (Médias Anuais)")
-
-top_sectores = (
-    filtered_df
-    .groupby("SectorAtividade")["FreeCashFlow"]
-    .mean()
-    .sort_values(ascending=False)
-    .head(10)
-    .round(0)
-    .reset_index()
-)
-top_sectores.columns = ["SectorAtividade", "FreeCashFlow"]
-top_sectores_sorted = top_sectores.sort_values("FreeCashFlow", ascending=True)
-
-fig_ranking = go.Figure(go.Bar(
-    x=top_sectores_sorted["FreeCashFlow"],
-    y=top_sectores_sorted["SectorAtividade"],
-    orientation="h",
-    marker=dict(
-        color=top_sectores_sorted["FreeCashFlow"],
-        colorscale="Blues",
-        showscale=False,
-    ),
-    text=top_sectores_sorted["FreeCashFlow"].apply(lambda v: f"{v:,.0f} k€"),
-    textposition="outside",
-    hovertemplate="<b>%{y}</b><br>FCF Médio: %{x:,.0f} k€<extra></extra>",
-))
-
-fig_ranking.update_layout(
-    xaxis=dict(title="FCF Médio (k€)", tickformat=".0f"),
-    yaxis=dict(title=""),
-    plot_bgcolor="#FAFAFA",
-    margin=dict(l=20, r=100, t=20, b=40),
-    height=400,
-)
-
-st.plotly_chart(fig_ranking, use_container_width=True)
 
 st.divider()
 
